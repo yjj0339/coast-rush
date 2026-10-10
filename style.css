@@ -1,0 +1,123 @@
+/* 极速海岸 —— 明亮浅色 UI */
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: #dfeefb; }
+body { font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif; user-select: none; }
+#gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+.hidden { display: none !important; }
+
+/* ---------- 加载页 ---------- */
+#loader {
+  position: fixed; inset: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(160deg, #bfe3ff 0%, #e8f6ff 45%, #fdf6e8 100%);
+}
+.ld-card {
+  text-align: center; padding: 44px 56px; border-radius: 28px;
+  background: rgba(255,255,255,.72); backdrop-filter: blur(14px);
+  box-shadow: 0 24px 60px rgba(60,110,170,.22);
+}
+.ld-sun {
+  width: 74px; height: 74px; margin: 0 auto 14px; border-radius: 50%;
+  background: radial-gradient(circle at 38% 35%, #fff3c0, #ffd45e 62%, #ffb63d);
+  box-shadow: 0 0 42px rgba(255, 196, 74, .8);
+  animation: rise 1.6s ease-out;
+}
+@keyframes rise { from { transform: translateY(26px) scale(.6); opacity: 0; } }
+.ld-card h1 { font-size: 44px; letter-spacing: 8px; color: #173a5e; }
+.ld-sub { margin: 8px 0 22px; color: #4a7396; letter-spacing: 3px; font-size: 14px; }
+.ld-bar {
+  width: 300px; height: 10px; margin: 0 auto 12px; border-radius: 6px;
+  background: #dbe8f2; overflow: hidden;
+}
+#ldFill { width: 0%; height: 100%; border-radius: 6px;
+  background: linear-gradient(90deg, #4aa8ff, #38d0c8); transition: width .25s; }
+#ldTip { color: #6285a3; font-size: 13px; margin-bottom: 20px; }
+#btnStart {
+  border: 0; cursor: pointer; padding: 13px 52px; font-size: 18px; letter-spacing: 6px;
+  color: #fff; border-radius: 999px; font-weight: 700;
+  background: linear-gradient(135deg, #38a4ff, #2cc9be);
+  box-shadow: 0 10px 26px rgba(46, 160, 230, .45);
+  transition: transform .15s, box-shadow .15s;
+}
+#btnStart:not(:disabled):hover { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(46,160,230,.55); }
+#btnStart:disabled { opacity: .55; cursor: default; }
+
+/* ---------- HUD ---------- */
+#hud { position: fixed; inset: 0; z-index: 10; pointer-events: none; }
+#hud .chip { pointer-events: auto; }
+
+#minimapCard {
+  position: absolute; top: 14px; left: 14px; padding: 8px; border-radius: 20px;
+  background: rgba(255,255,255,.66); backdrop-filter: blur(10px);
+  box-shadow: 0 8px 24px rgba(50,90,140,.18);
+}
+#minimap { display: block; border-radius: 14px; }
+
+#topBtns { position: absolute; top: 14px; right: 14px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; max-width: 46vw; }
+.chip {
+  border: 0; cursor: pointer; pointer-events: auto;
+  padding: 9px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; color: #1d4568;
+  background: rgba(255,255,255,.72); backdrop-filter: blur(8px);
+  box-shadow: 0 4px 14px rgba(50,90,140,.16);
+}
+.chip:active { transform: scale(.94); }
+
+#speedCard {
+  position: absolute; right: 18px; bottom: 18px; padding: 14px 22px 12px;
+  border-radius: 22px; text-align: center; min-width: 150px;
+  background: rgba(255,255,255,.72); backdrop-filter: blur(10px);
+  box-shadow: 0 10px 30px rgba(50,90,140,.2);
+}
+#speedNum { font-size: 52px; font-weight: 800; line-height: 1; color: #14324f; font-variant-numeric: tabular-nums; }
+.speedUnit { color: #5b81a1; font-size: 13px; margin-top: 2px; letter-spacing: 2px; }
+#gearBadge {
+  position: absolute; top: -14px; left: -14px; width: 42px; height: 42px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #38a4ff, #2cc9be); color: #fff; font-weight: 800; font-size: 19px;
+  box-shadow: 0 6px 16px rgba(46,160,230,.4);
+}
+#surfChip {
+  margin-top: 8px; display: inline-block; padding: 3px 12px; border-radius: 999px;
+  font-size: 12px; color: #235; background: #e3f1e6; font-weight: 600;
+}
+#surfChip.gravel { background: #f3ecd9; }
+#surfChip.grass  { background: #e2f0d9; }
+#surfChip.sand   { background: #f7edd8; }
+#surfChip.air    { background: #e8eaf6; }
+
+#tips {
+  position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+  color: #3d6a92; font-size: 12.5px; padding: 7px 18px; border-radius: 999px;
+  background: rgba(255,255,255,.55); backdrop-filter: blur(6px); white-space: nowrap;
+}
+#toast {
+  position: absolute; top: 70px; left: 50%; transform: translateX(-50%);
+  padding: 9px 22px; border-radius: 999px; font-size: 14px; font-weight: 600; color: #14456b;
+  background: rgba(255,255,255,.85); box-shadow: 0 6px 20px rgba(50,90,140,.2);
+  opacity: 0; transition: opacity .3s;
+}
+#toast.show { opacity: 1; }
+
+/* ---------- 触屏 ---------- */
+#touchUI { position: fixed; inset: 0; z-index: 20; pointer-events: none; }
+.tzone { position: absolute; bottom: 96px; display: flex; gap: 14px; align-items: flex-end; }
+.tzone.left { left: 20px; }
+.tzone.right { right: 20px; }
+.tbtn {
+  pointer-events: auto; width: 76px; height: 76px; border-radius: 26px; border: 0;
+  font-size: 26px; color: #1d4568; background: rgba(255,255,255,.6); backdrop-filter: blur(8px);
+  box-shadow: 0 8px 20px rgba(50,90,140,.22); touch-action: none;
+}
+.tbtn.big { width: 92px; height: 92px; background: rgba(90, 200, 140, .65); }
+.tbtn.small { width: 60px; height: 60px; font-size: 20px; }
+.tbtn.press { background: rgba(70, 170, 230, .75); color: #fff; }
+.tbtn.big.press { background: rgba(46, 190, 120, .85); }
+
+@media (max-width: 760px) {
+  #tips { display: none; }
+  #speedCard { right: 12px; bottom: 190px; padding: 10px 16px 8px; min-width: 120px; }
+  #speedNum { font-size: 38px; }
+  #gearBadge { width: 34px; height: 34px; font-size: 15px; top: -10px; left: -10px; }
+  #minimapCard { transform: scale(.78); transform-origin: top left; }
+  #topBtns .chip { padding: 7px 10px; font-size: 12px; }
+}

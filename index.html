@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>极速海岸 Coast Rush · 极品飞车风自由驾驶</title>
+<meta name="description" content="阳光海岸开放世界自由驾驶：超级跑车、城市与山路越野，极品飞车风格 3D 网页游戏">
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏎️</text></svg>">
+<script type="importmap">
+{ "imports": {
+    "three": "./vendor/three.module.js",
+    "three/addons/": "./vendor/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<canvas id="gl"></canvas>
+
+<!-- 加载页 -->
+<div id="loader">
+  <div class="ld-card">
+    <div class="ld-sun"></div>
+    <h1>极速海岸</h1>
+    <p class="ld-sub">COAST RUSH · 极品飞车风自由驾驶</p>
+    <div class="ld-bar"><div id="ldFill"></div></div>
+    <p id="ldTip">正在铺装海岸公路…</p>
+    <button id="btnStart" disabled>加载中…</button>
+  </div>
+</div>
+
+<!-- HUD -->
+<div id="hud" class="hidden">
+  <div id="minimapCard"><canvas id="minimap" width="220" height="220"></canvas></div>
+  <div id="topBtns">
+    <button class="chip" id="btnAudio">🔊 声音</button>
+    <button class="chip" id="btnQuality">✨ 画质:高</button>
+    <button class="chip" id="btnCam">📷 视角</button>
+    <button class="chip" id="btnColor">🎨 车色</button>
+    <button class="chip" id="btnReset">↺ 复位</button>
+  </div>
+  <div id="speedCard">
+    <div id="gearBadge">N</div>
+    <div id="speedNum">0</div>
+    <div class="speedUnit">km/h</div>
+    <div id="surfChip">柏油</div>
+  </div>
+  <div id="toast"></div>
+  <div id="tips">W/S 油门刹车 · A/D 转向 · 空格 手刹漂移 · R 复位 · V 视角 · C 车色</div>
+</div>
+
+<!-- 触屏控制 -->
+<div id="touchUI" class="hidden">
+  <div class="tzone left">
+    <button class="tbtn" id="tLeft">◀</button>
+    <button class="tbtn" id="tRight">▶</button>
+  </div>
+  <div class="tzone right">
+    <button class="tbtn small" id="tHandbrake">✋</button>
+    <button class="tbtn" id="tBrake">▼</button>
+    <button class="tbtn big" id="tGas">▲</button>
+  </div>
+</div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
