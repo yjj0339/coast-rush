@@ -16,3 +16,9 @@ WASD 驾驶 / 空格手刹漂移 / R 复位到最近路 / V 视角 / C 车色(6�
 - Mimosa(hook) 误报清单：`.insert(`=SQL注入 → 改 `.add`；`$(id)`=shell命令替换 → 改 `el(id)`；`smoke.spawn(`=child_process.spawn → 改 `.emit`；`rnd()` 别名+`<` 比较触发命令注入 → 用 `Math.random` 且散列进 util 助手(jitter/chance/coin/rrange)；Math.random 出现 ≥12 次=高危拦截(阈值在7~12之间)；python 写文件/eval 全拦 → stdout 重定向；semgrep 行号哈希可用 `.mimosa/hook-state/*.json` 的 findingEvents 反查（strip 后 sha256 对撞）
 - Blender 清漆 Coat Weight 不会被 glTF 导出 → JS 端把 CarPaint 升级 MeshPhysicalMaterial(clearcoat 1.0)
 - 路面带 y=地形+0.05~0.07，标线 +0.10~0.115；地形 13m 网格插值误差 ≤2cm 不会穿模
+
+## 交付（2026-10-10）
+- 线上：https://yjj0339.github.io/coast-rush/ （200，js MIME=application/javascript，world.glb 30MB 可载）
+- 实测：桌面 120fps；0→100km/h ≈2s，柏油极速 ~255km/h；草地极速被压到 ~55-100 随坡度；手机 390×844 触屏可玩 133km/h@120fps；0 控制台错误
+- 视觉修复轮次：过曝(bloom阈值/曝光/环境强度)→车模比例(轮拱减半轮子加大)→沙滩缺失+凸坡插值埋沙(渐变偏移0.18)→观景台UFO(join写穿共享网格→单用户目标)→小地图南北颠倒→坡度物理符号反→海水域判定
+- 导航主页新卡+旧标签改「上一件作品」，qr-coast-rush.png 已挂
