@@ -15,6 +15,7 @@ export class Hud {
     this.gearBadge = document.getElementById('gearBadge');
     this.surfChip = document.getElementById('surfChip');
     this.toastEl = document.getElementById('toast');
+    this.nitroFill = document.getElementById('nitroFill');
     this.toastTimer = 0;
 
     // —— 预渲染底图 ——
@@ -69,6 +70,8 @@ export class Hud {
     this.speedNum.textContent = kmh;
     const g = phys.gear;
     this.gearBadge.textContent = g === -1 ? 'R' : g === 0 ? 'N' : String(g);
+    this.nitroFill.style.width = Math.round((phys.nitro || 0) * 100) + '%';
+    this.nitroFill.classList.toggle('boost', !!phys.boosting);
     const s = phys.surface;
     if (this._surf !== s) {
       this._surf = s;

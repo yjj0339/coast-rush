@@ -46,6 +46,14 @@ export class AudioSys {
     this.skid.connect(this.skidF); this.skidF.connect(this.skidG); this.skidG.connect(this.master);
     this.skid.start();
 
+    // —— 氮气喷射 ——
+    this.boost = c.createBufferSource(); this.boost.buffer = buf; this.boost.loop = true;
+    this.boostF = c.createBiquadFilter(); this.boostF.type = 'bandpass';
+    this.boostF.frequency.value = 1500; this.boostF.Q.value = 0.8;
+    this.boostG = c.createGain(); this.boostG.gain.value = 0;
+    this.boost.connect(this.boostF); this.boostF.connect(this.boostG); this.boostG.connect(this.master);
+    this.boost.start();
+
     this.started = true;
   }
   toggle() {
@@ -54,18 +62,19 @@ export class AudioSys {
     if (this.master) this.master.gain.value = this.enabled ? 0.9 : 0;
     return this.enabled;
   }
-  // rpm: 0..1（换挡内分数） throttle: 0..1 speed: m/s drift: 0..1
-  update(rpm, throttle, speed, drift, dt) {
+  // rpm: 0..1（换挡内分数） throttle: 0..1 speed: m/s drift: 0..1 boost: 0/1
+  update(rpm, throttle, speed, drift, boost, dt) {
     if (!this.started || !this.enabled) return;
     const c = this.ctx, t = c.currentTime;
-    const f = 62 + rpm * 168 + throttle * 14;
+    const f = 62 + rpm * 168 + throttle * 14 + (boost ? 26 : 0);
     this.osc1.frequency.setTargetAtTime(f, t, 0.03);
     this.osc2.frequency.setTargetAtTime(f * 0.5, t, 0.03);
-    this.engFilter.frequency.setTargetAtTime(500 + rpm * 1800 + throttle * 600, t, 0.05);
-    const target = 0.05 + throttle * 0.085 + rpm * 0.03 + Math.min(1, speed / 80) * 0.015;
+    this.engFilter.frequency.setTargetAtTime(500 + rpm * 1800 + throttle * 600 + (boost ? 900 : 0), t, 0.05);
+    const target = 0.05 + throttle * 0.085 + rpm * 0.03 + Math.min(1, speed / 80) * 0.015 + (boost ? 0.05 : 0);
     this.engGain.gain.setTargetAtTime(this.enabled ? target : 0, t, 0.08);
-    this.windG.gain.setTargetAtTime(Math.min(0.16, (speed / 82) ** 2 * 0.2), t, 0.15);
+    this.windG.gain.setTargetAtTime(Math.min(0.16, (speed / 82) ** 2 * 0.2) + (boost ? 0.06 : 0), t, 0.15);
     this.skidG.gain.setTargetAtTime(drift * 0.14, t, 0.05);
+    this.boostG.gain.setTargetAtTime(boost ? 0.15 : 0, t, 0.07);
   }
   impact(strength) {
     if (!this.started || !this.enabled) return;

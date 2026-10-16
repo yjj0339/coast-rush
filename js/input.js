@@ -2,7 +2,7 @@
 export class Input {
   constructor() {
     this.keys = {};
-    this.touch = { gas: 0, brake: 0, left: 0, right: 0, hand: 0 };
+    this.touch = { gas: 0, brake: 0, left: 0, right: 0, hand: 0, nitro: 0 };
     this.anyKeyAt = 0;
     addEventListener('keydown', e => {
       if (e.repeat) return;
@@ -18,6 +18,7 @@ export class Input {
     this.bindTouch('tLeft', 'left');
     this.bindTouch('tRight', 'right');
     this.bindTouch('tHandbrake', 'hand');
+    this.bindTouch('tNitro', 'nitro');
   }
   bindTouch(id, prop) {
     const el = document.getElementById(id);
@@ -51,5 +52,11 @@ export class Input {
   }
   get handbrake() {
     return (this.keys.Space || this.touch.hand) ? 1 : 0;
+  }
+  get nitro() {
+    let n = 0;
+    if (this.keys.ShiftLeft || this.keys.ShiftRight || this.keys.KeyN) n += 1;
+    if (this.touch.nitro) n += 1;
+    return Math.min(1, n);
   }
 }

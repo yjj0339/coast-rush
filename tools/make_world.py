@@ -749,8 +749,12 @@ def palm(x, z, s=1.0, lean=None):
     top_y = yb + 4.6*s
     for k in range(8):
         a = k/8*math.tau + rng.uniform(-0.2, 0.2)
-        fr = box('Frond', (0.5*s, 0.04, 2.8*s), (px+math.cos(a)*1.2*s, top_y+0.3, pz+math.sin(a)*1.2*s),
-                 MT['Frond'], group='Palms', rot=(0.45, -a, 0.35), bevel=0)
+        ca, sa = math.cos(a), math.sin(a)
+        # 两段式: 基段微翘 + 末段下垂
+        box('Frond', (0.5*s, 0.04, 1.7*s), (px+ca*0.85*s, top_y+0.42, pz+sa*0.85*s),
+            MT['Frond'], group='Palms', rot=(0.28, -a, 0.35), bevel=0)
+        box('Frond', (0.34*s, 0.035, 1.6*s), (px+ca*1.95*s, top_y+0.18, pz+sa*1.95*s),
+            MT['Frond'], group='Palms', rot=(0.75, -a, 0.35), bevel=0)
     sphere('Coco', (px, top_y+0.1, pz), (0.35*s, 0.35*s, 0.35*s), MT['TrunkPalm'], group='Palms', seg=8, ring=5)
 
 for i in range(0, len(hctr), 9):
@@ -840,14 +844,18 @@ for (x, z) in rocks:
     sphere('Rock', (x, yb+s*0.3, z), (s, s*0.65, s*rng.uniform(0.7, 1.3)), MT['Rock'], group='Rocks', seg=8, ring=5)
 
 # 背景山脉环
-for k in range(26):
-    a = k/26*math.tau + rng.uniform(-0.06, 0.06)
+for k in range(30):
+    a = k/30*math.tau + rng.uniform(-0.05, 0.05)
     r = rng.uniform(1680, 2080)
     x = math.cos(a)*r
     z = math.sin(a)*r - 150
-    h = rng.uniform(120, 300)
-    sphere('Mount', (x, h*0.18-20, z), (rng.uniform(240, 460), h, rng.uniform(200, 380)),
-           MT['Mount'], group='Mountains', seg=10, ring=6)
+    h = rng.uniform(150, 330)
+    if k % 4 == 3:   # 圆丘点缀
+        sphere('Mount', (x, h*0.22-24, z), (rng.uniform(260, 430), h, rng.uniform(220, 360)),
+               MT['Mount'], group='Mountains', seg=10, ring=6)
+    else:            # 尖峰
+        mc = cone('Mount', rng.uniform(240, 420), h, (x, h/2 - 30, z), MT['Mount'], group='Mountains', verts=9)
+        mc.scale = (rng.uniform(0.8, 1.5), rng.uniform(0.8, 1.5), 1.0)
 print('vegetation ok', len(pines), 'pines')
 
 # ============================================================

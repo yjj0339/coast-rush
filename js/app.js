@@ -53,7 +53,7 @@ const sunDir = new THREE.Vector3(...SPEC.sun.dir).normalize();
 const sky = new Sky();
 sky.scale.setScalar(4500);
 const su = sky.material.uniforms;
-su.turbidity.value = 5;
+su.turbidity.value = 3.4;
 su.rayleigh.value = 2.1;
 su.mieCoefficient.value = 0.0045;
 su.mieDirectionalG.value = 0.8;
@@ -119,6 +119,23 @@ const hud = new Hud(SPEC, COL);
 
 // ---------- 车辆外观 ----------
 const carObj = worldBits.car;
+// 氮气尾焰（挂在车身，四出排气口，加色混合青色火焰）
+const flames = [];
+{
+  const fg = new THREE.ConeGeometry(0.075, 0.9, 8);
+  const fm = new THREE.MeshBasicMaterial({
+    color: 0x9fecff, transparent: true, opacity: 1.0,
+    blending: THREE.AdditiveBlending, depthWrite: false,
+  });
+  for (const fxp of [0.30, 0.46, -0.30, -0.46]) {
+    const f = new THREE.Mesh(fg, fm);
+    f.rotation.x = -Math.PI / 2;          // 锥尖朝车尾
+    f.position.set(fxp, 0.315, -2.58);
+    f.visible = false;
+    carObj.add(f);
+    flames.push(f);
+  }
+}
 const spins = ['SpinFL', 'SpinFR', 'SpinRL', 'SpinRR'].map(n => worldBits.wheels[n]).filter(Boolean);
 const fronts = ['WheelFL', 'WheelFR'].map(n => worldBits.wheels[n]).filter(Boolean);
 const PAINTS = [
@@ -345,6 +362,7 @@ onResize();
 // ---------- 主循环 ----------
 const clock = new THREE.Clock();
 let fpsAcc = 0, fpsN = 0, mapAcc = 0;
+let driftAcc = 0, driftHold = 0, airT = 0, speedlineOn = false;
 function tick() {
   requestAnimationFrame(tick);
   const dt = Math.min(clock.getDelta(), 0.05);
@@ -362,15 +380,43 @@ function tick() {
     aLongSm = aLongSm * 0.9 + phys.vF * 0.1;
     if (traffic) traffic.update(dt, phys.pos);
     updateEffects(dt, res);
+
+    // —— 漂移计分（结束 0.9s 后结算弹幕）——
+    if (res.drift > 0.3) {
+      driftAcc += res.drift * Math.abs(phys.vF) * dt * 14;
+      driftHold = 0.9;
+    } else if (driftAcc > 0) {
+      driftHold -= dt;
+      if (driftHold <= 0) {
+        const pts = Math.round(driftAcc);
+        if (pts > 80) hud.toast('漂移 +' + pts);
+        driftAcc = 0;
+      }
+    }
+    // —— 腾空提示 ——
+    if (!phys.grounded) airT += dt;
+    else { if (airT > 0.85) hud.toast('腾空飞跃！'); airT = 0; }
   }
   updateCarVisual(dt);
+
+  // —— 氮气视觉：尾焰闪烁 + 速度线 + FOV 冲刺 ——
+  const boosting = !!phys.boosting && phys.nitro > 0.02;
+  for (const f of flames) {
+    f.visible = boosting;
+    if (boosting) f.scale.set(0.7 + rand01() * 0.7, 0.8 + rand01() * 1.9, 0.7 + rand01() * 0.7);
+  }
+  const sl = el('speedlines');
+  const wantSl = boosting && speedN > 0.25;
+  if (wantSl !== speedlineOn) { speedlineOn = wantSl; }
+  sl.style.opacity = wantSl ? String(0.35 + speedN * 0.4) : '0';
+
   if (camMode === 3) {
     const t = performance.now() * 0.00012;
     camera.position.set(phys.pos.x + Math.cos(t) * 15, phys.pos.y + 5.2, phys.pos.z + Math.sin(t) * 15);
     camera.lookAt(phys.pos.x, phys.pos.y + 0.9, phys.pos.z);
     camPos.copy(camera.position);
   } else {
-    updateCamera(dt, speedN);
+    updateCamera(dt, speedN + (boosting ? 0.16 : 0));
   }
 
   sun.position.set(phys.pos.x + sunDir.x * 430, phys.pos.y + sunDir.y * 430, phys.pos.z + sunDir.z * 430);
@@ -384,7 +430,7 @@ function tick() {
     if (c.position.x > 1700) c.position.x = -1700;
   }
 
-  audio.update(phys.rpm, input.throttle, Math.abs(phys.vF), res.drift, dt);
+  audio.update(phys.rpm, input.throttle, Math.abs(phys.vF), res.drift, boosting, dt);
 
   mapAcc += dt;
   if (mapAcc > 0.08 && started) { hud.frame(mapAcc, phys, traffic, camMode); mapAcc = 0; }
@@ -393,6 +439,7 @@ function tick() {
   devState.x = phys.pos.x; devState.z = phys.pos.z;
   devState.speed = Math.abs(phys.vF) * 3.6;
   devState.gear = phys.gear; devState.surface = phys.surface; devState.drift = phys.drift;
+  devState.nitro = phys.nitro; devState.boosting = boosting;
 
   if (composer) composer.render();
   else renderer.render(scene, camera);

@@ -3,6 +3,19 @@
 html, body { width: 100%; height: 100%; overflow: hidden; background: #dfeefb; }
 body { font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif; user-select: none; }
 #gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+#speedlines {
+  position: fixed; inset: 0; z-index: 5; pointer-events: none; opacity: 0;
+  transition: opacity .18s ease-out;
+  background:
+    radial-gradient(ellipse at center, transparent 38%, rgba(130,205,255,.26) 62%, rgba(255,255,255,.5) 100%);
+}
+#speedlines::after {
+  content: ""; position: absolute; inset: 0;
+  background: repeating-conic-gradient(from 0deg at 50% 50%,
+    rgba(255,255,255,0) 0deg 6deg, rgba(255,255,255,.17) 7deg 8.6deg);
+  -webkit-mask-image: radial-gradient(ellipse at center, transparent 30%, #000 64%);
+  mask-image: radial-gradient(ellipse at center, transparent 30%, #000 64%);
+}
 .hidden { display: none !important; }
 
 /* ---------- 加载页 ---------- */
@@ -80,6 +93,21 @@ body { font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif; use
   margin-top: 8px; display: inline-block; padding: 3px 12px; border-radius: 999px;
   font-size: 12px; color: #235; background: #e3f1e6; font-weight: 600;
 }
+#nitroBar {
+  margin-top: 10px; height: 8px; border-radius: 5px; overflow: hidden;
+  background: #dbe9f4; box-shadow: inset 0 1px 2px rgba(40,80,120,.18);
+}
+#nitroFill {
+  height: 100%; width: 40%; border-radius: 5px;
+  background: linear-gradient(90deg, #35d0e8, #2b8cff);
+  transition: width .12s linear;
+}
+#nitroFill.boost {
+  background: linear-gradient(90deg, #9ff0ff, #38b6ff);
+  box-shadow: 0 0 12px rgba(80, 200, 255, .95);
+}
+.tbtn.nitro { background: rgba(90, 195, 250, .62); }
+.tbtn.nitro.press { background: rgba(60, 180, 250, .9); }
 #surfChip.gravel { background: #f3ecd9; }
 #surfChip.grass  { background: #e2f0d9; }
 #surfChip.sand   { background: #f7edd8; }

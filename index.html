@@ -16,6 +16,7 @@
 </head>
 <body>
 <canvas id="gl"></canvas>
+<div id="speedlines"></div>
 
 <!-- 加载页 -->
 <div id="loader">
@@ -43,10 +44,11 @@
     <div id="gearBadge">N</div>
     <div id="speedNum">0</div>
     <div class="speedUnit">km/h</div>
+    <div id="nitroBar"><div id="nitroFill"></div></div>
     <div id="surfChip">柏油</div>
   </div>
   <div id="toast"></div>
-  <div id="tips">W/S 油门刹车 · A/D 转向 · 空格 手刹漂移 · R 复位 · V 视角 · C 车色</div>
+  <div id="tips">W/S 油门刹车 · A/D 转向 · 空格 手刹漂移 · Shift 氮气 · R 复位 · V 视角 · C 车色</div>
 </div>
 
 <!-- 触屏控制 -->
@@ -56,6 +58,7 @@
     <button class="tbtn" id="tRight">▶</button>
   </div>
   <div class="tzone right">
+    <button class="tbtn small nitro" id="tNitro">⚡</button>
     <button class="tbtn small" id="tHandbrake">✋</button>
     <button class="tbtn" id="tBrake">▼</button>
     <button class="tbtn big" id="tGas">▲</button>

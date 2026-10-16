@@ -23,6 +23,7 @@ export class CarPhysics {
     this.drift = 0;          // 0..1 漂移强度（供特效/音效）
     this.impact = 0;         // 本帧碰撞强度
     this.gear = 0; this.rpm = 0;
+    this.nitro = 0.4; this.boosting = false;
     this.waterT = 0;
     this.roadSamples = [];
 
@@ -117,6 +118,15 @@ export class CarPhysics {
       }
       a -= 0.0011 * v * Math.abs(v) + ROLL[S] * Math.sign(v) * Math.min(1, Math.abs(v) / 2 + 0.15);
       if (input.handbrake) a -= 5.5 * Math.sign(v) * Math.min(1, Math.abs(v));
+      // —— 氮气：漂移积攒，Shift 释放 ——
+      const wantBoost = input.nitro > 0 && this.nitro > 0.02 && v > 3 && !input.handbrake;
+      this.boosting = wantBoost;
+      if (wantBoost) {
+        a += 9.6;
+        this.nitro = Math.max(0, this.nitro - dt / 3.4);
+      } else {
+        this.nitro = Math.min(1, this.nitro + dt * (0.03 + this.drift * 0.24));
+      }
       // 坡度重力分量
       const e = 1.5;
       const gx = (terrainH(this.pos.x + e, this.pos.z) - terrainH(this.pos.x - e, this.pos.z)) / (2 * e);
