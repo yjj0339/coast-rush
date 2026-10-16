@@ -103,6 +103,9 @@ MT = {
     'Lawn':     imgmat('Lawn', 'grass.png', rough=0.9, factor=(0.72, 0.88, 0.66)),
     'Fountain': mat('Fountain', S(180, 216, 232), rough=0.15, metallic=0.1),
     'Bench':    mat('Bench', S(142, 100, 66), rough=0.8),
+    'Radar':    imgmat('Radar', 'radar.png', rough=0.45, doubleside=True),
+    'Sprint':   imgmat('Sprint', 'sprint.png', rough=0.5, doubleside=True),
+    'Foam':     mat('Foam', S(240, 248, 252), rough=0.4, doubleside=True, alpha=0.55),
     'TreeBlob': mat('TreeBlob', S(70, 140, 62), rough=0.9),
     'Green':    mat('Green', S(46, 110, 60), rough=0.8),
 }
@@ -253,8 +256,9 @@ def catmull(pts, step=3.0, closed=False):
     return out
 
 def ribbon(center, width, y_off, matl, group, uv_tile=7.0, name='ribbon'):
-    """沿中心线建路面带。center: [(x,z)]"""
+    """沿中心线建路面带 + 两侧裙边（横坡上不悬空）。center: [(x,z)]"""
     verts, faces, uvs = [], [], []
+    edgeL, edgeR = [], []   # 每断面: (路缘xyz, 地面y)
     L = 0.0
     for i, (x, z) in enumerate(center):
         if i == 0:
@@ -271,9 +275,22 @@ def ribbon(center, width, y_off, matl, group, uv_tile=7.0, name='ribbon'):
         verts.append(C(x-nx*hw, yy, z-nz*hw))
         verts.append(C(x+nx*hw, yy, z+nz*hw))
         uvs += [(0, L/uv_tile), (1, L/uv_tile)]
+        edgeL.append((x-nx*hw, yy, z-nz*hw, y0 - 0.6))
+        edgeR.append((x+nx*hw, yy, z+nz*hw, y1 - 0.6))
         if i > 0:
             a = (i-1)*2
             faces.append((a, a+1, a+2)); faces.append((a+1, a+3, a+2))
+    # 两侧裙边（顶=路缘，底=地面-0.6 埋入地形）
+    for edge in (edgeL, edgeR):
+        base = len(verts)
+        for (ex, ey, ez, gy) in edge:
+            verts.append(C(ex, gy, ez))
+            uvs.append((0.03, 0))
+        n = len(edge)
+        for i in range(n - 1):
+            a, b = i * 2, i * 2 + 2     # 路缘顶点
+            s0, s1 = base + i, base + i + 1
+            faces.append((a, s0, b)); faces.append((b, s0, s1))
     return mesh_obj(name, verts, faces, matl, uvs=uvs, group=group, normals=[(0, 1, 0)]*len(verts))
 
 def solid_strip(center, width, h, y_off, matl, group, name='strip'):
@@ -721,6 +738,50 @@ for s_pos in (300, 1150, 2050):
         cyl('BBleg', 0.18, 12, (px+sx, yb+6, pz), MT['Pole'], group='Billboard', verts=8)
     box('BBpanel', (14, 7, 0.4), (px, yb+13, pz), MT['Billboard'], group='Billboard', rot=(0, math.atan2(dx, dz), 0), bevel=0)
     collider_circles.append([px, pz, 0.5])
+
+# —— 海岸冲刺：测速板×3 + 门架×3（位置导出到 pois 供 JS 触发）——
+def road_frame_at(ctr, s_i, side, dist):
+    x, z = ctr[s_i]
+    dx, dz = ctr[min(s_i + 4, len(ctr) - 1)][0] - x, ctr[min(s_i + 4, len(ctr) - 1)][1] - z
+    l = math.hypot(dx, dz) or 1.0
+    tx, tz = dx / l, dz / l
+    nx, nz = -dz / l, dx / l
+    return x + nx * side * dist, z + nz * side * dist, tx, tz
+
+hw_full = get_center(hwy)
+n_hw = len(hw_full)
+pois_boards, pois_gates = [], []
+for frac in (0.30, 0.55, 0.80):
+    si = int(n_hw * frac)
+    bx, bz, tx, tz = road_frame_at(hw_full, si, -1, 11.5)
+    yb = terrain_h(bx, bz)
+    cyl('RadarPole', 0.12, 3.4, (bx, yb + 1.7, bz), MT['Pole'], group='Billboard', verts=8)
+    box('RadarPanel', (5.2, 2.6, 0.18), (bx, yb + 4.4, bz), MT['Radar'],
+        group='Billboard', rot=(0, math.atan2(-tx, -tz), 0), bevel=0)
+    pois_boards.append([bx, bz])
+
+for gi, frac in enumerate((0.015, 0.5, 0.985)):
+    si = int(n_hw * frac)
+    lx, lz, tx, tz = road_frame_at(hw_full, si, -1, 10.0)
+    rx, rz, _, _ = road_frame_at(hw_full, si, 1, 10.0)
+    ang = math.atan2(tx, tz)
+    yl = terrain_h(lx, lz)
+    cyl('GateLeg', 0.22, 7.0, (lx, yl + 3.5, lz), MT['Pole'], group='Billboard', verts=10)
+    cyl('GateLeg', 0.22, 7.0, (rx, terrain_h(rx, rz) + 3.5, rz), MT['Pole'], group='Billboard', verts=10)
+    mx, mz = (lx + rx) / 2, (lz + rz) / 2
+    ym = max(yl, terrain_h(rx, rz))
+    box('GateBeam', (21.6, 0.5, 0.5), (mx, ym + 6.7, mz), MT['Pole'], group='Billboard', rot=(0, ang, 0), bevel=0)
+    box('GateBanner', (20.0, 1.7, 0.14), (mx, ym + 5.6, mz), MT['Sprint'], group='Billboard', rot=(0, ang, 0), bevel=0)
+    pois_gates.append([mx, mz])
+
+# —— 岸浪泡沫线 ——
+for seg_a in range(0, 30):
+    x0 = -1050 + seg_a * 70
+    foam_v = []
+    for (xx, zz) in ((x0, 855.5), (x0 + 70, 855.8), (x0 + 70, 857.2), (x0, 857.0)):
+        foam_v.append(C(xx, -3.15, zz))
+    mesh_obj('Foam', foam_v, [(0, 1, 2), (0, 2, 3)], MT['Foam'], group='Beach', normals=[(0, 1, 0)] * 4)
+
 print('props ok')
 
 # ============================================================
@@ -896,7 +957,7 @@ except TypeError:
 print('EXPORTED world.glb', os.path.getsize(os.path.join(OUTDIR, 'world.glb'))//1024, 'KB')
 
 pois = {'lighthouse': [lh_x, lh_z], 'lake': [SPEC['lake']['x'], SPEC['lake']['z']],
-        'plaza': [lx, lz]}
+        'plaza': [lx, lz], 'boards': pois_boards, 'gates': pois_gates}
 out = {'rects': collider_rects, 'circles': collider_circles,
        'rails': rail_polys, 'pois': pois}
 print('@@COLLIDERS@@')

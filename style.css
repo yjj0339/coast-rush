@@ -126,6 +126,30 @@ body { font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif; use
 }
 #toast.show { opacity: 1; }
 
+#flash {
+  position: fixed; inset: 0; z-index: 30; pointer-events: none;
+  background: #fff; opacity: 0; transition: opacity .35s ease-out;
+}
+#flash.snap { opacity: .85; transition: none; }
+
+#sprintTimer {
+  position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
+  padding: 10px 30px; border-radius: 18px; text-align: center;
+  background: rgba(255,255,255,.78); backdrop-filter: blur(10px);
+  box-shadow: 0 8px 24px rgba(50,90,140,.22);
+  font-size: 34px; font-weight: 800; color: #14324f; font-variant-numeric: tabular-nums;
+  letter-spacing: 2px;
+}
+#sprintTimer.count { color: #e2554d; font-size: 44px; }
+#prompt {
+  position: absolute; bottom: 88px; left: 50%; transform: translateX(-50%);
+  padding: 11px 26px; border-radius: 999px; font-size: 16px; font-weight: 700; color: #fff;
+  background: linear-gradient(135deg, #38a4ff, #2cc9be);
+  box-shadow: 0 8px 22px rgba(46,160,230,.45);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+@keyframes pulse { 50% { transform: translateX(-50%) scale(1.05); } }
+
 /* ---------- 触屏 ---------- */
 #touchUI { position: fixed; inset: 0; z-index: 20; pointer-events: none; }
 .tzone { position: absolute; bottom: 96px; display: flex; gap: 14px; align-items: flex-end; }

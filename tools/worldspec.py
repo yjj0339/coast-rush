@@ -18,8 +18,8 @@ def terrain_h(x, z):
     b2 = 10.0*math.sin(x*0.0041+0.5)*math.sin(z*0.0036+2.1)
     b3 = 3.2*math.sin(x*0.0105+2.0)*math.cos(z*0.0092+0.3)
     base = b1+b2+b3
-    u = max((ax-600.0)/180.0, (az-620.0)/180.0, 0.0)
-    m = u*u*(3.0-2.0*u)                                # 城市压平掩码(0城内 1野外)
+    u = min(1.0, max((ax-600.0)/180.0, (az-620.0)/180.0, 0.0))
+    m = u*u*(3.0-2.0*u)                                # 城市压平掩码(0城内 1野外,必须clamp到1)
     c = _sstep(min(max((z-480.0)/320.0, 0.0), 1.0))    # 海岸条带
     roll = 1.0-0.92*c
     micro = 0.5*math.sin(x*0.021+1.7)*math.cos(z*0.017+0.9)
@@ -38,7 +38,8 @@ def terrain_h(x, z):
     r = math.sqrt(x*x+(z+150.0)**2)
     e = _sstep(min(max((r-1120.0)/380.0, 0.0), 1.0))
     ang = math.atan2(z+150.0, x)
-    h += e*(62.0+26.0*math.sin(3.0*ang+1.2)+14.0*math.sin(7.0*ang+0.4))
+    coast_gap = 1.0 - _sstep(min(max((z-460.0)/220.0, 0.0), 1.0))   # 海岸走廊让山退场
+    h += e*coast_gap*(62.0+26.0*math.sin(3.0*ang+1.2)+14.0*math.sin(7.0*ang+0.4))
     return h
 
 JS_H = r'''
@@ -49,7 +50,7 @@ export function terrainH(x, z) {
   const b2 = 10.0*Math.sin(x*0.0041+0.5)*Math.sin(z*0.0036+2.1);
   const b3 = 3.2*Math.sin(x*0.0105+2.0)*Math.cos(z*0.0092+0.3);
   const base = b1+b2+b3;
-  const u = Math.max((ax-600.0)/180.0, (az-620.0)/180.0, 0.0);
+  const u = Math.min(1.0, Math.max((ax-600.0)/180.0, (az-620.0)/180.0, 0.0));
   const m = u*u*(3.0-2.0*u);
   const c = sstep(Math.min(Math.max((z-480.0)/320.0, 0.0), 1.0));
   const roll = 1.0-0.92*c;
@@ -64,7 +65,8 @@ export function terrainH(x, z) {
   const r = Math.sqrt(x*x+(z+150.0)**2);
   const e = sstep(Math.min(Math.max((r-1120.0)/380.0, 0.0), 1.0));
   const ang = Math.atan2(z+150.0, x);
-  h += e*(62.0+26.0*Math.sin(3.0*ang+1.2)+14.0*Math.sin(7.0*ang+0.4));
+  const coastGap = 1.0 - sstep(Math.min(Math.max((z-460.0)/220.0, 0.0), 1.0));
+  h += e*coastGap*(62.0+26.0*Math.sin(3.0*ang+1.2)+14.0*Math.sin(7.0*ang+0.4));
   return h;
 }
 '''

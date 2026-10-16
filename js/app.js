@@ -117,6 +117,108 @@ try {
 
 const hud = new Hud(SPEC, COL);
 
+// ---------- 测速板 & 海岸冲刺 ----------
+const BOARDS = (COL.pois && COL.pois.boards) || [];
+const GATES = (COL.pois && COL.pois.gates) || [];
+const boardCd = BOARDS.map(() => 0);
+const flashEl = el('flash');
+function cameraFlash() {
+  flashEl.classList.add('snap');
+  setTimeout(() => flashEl.classList.remove('snap'), 60);
+}
+let trapCd = 0;
+function updateTraps(dt) {
+  trapCd = Math.max(0, trapCd - dt);
+  for (let i = 0; i < BOARDS.length; i++) {
+    if (boardCd[i] > 0) { boardCd[i] -= dt; continue; }
+    const dx = phys.pos.x - BOARDS[i][0], dz = phys.pos.z - BOARDS[i][1];
+    if (dx * dx + dz * dz < 64) {
+      boardCd[i] = 6;
+      if (trapCd > 0) continue;
+      trapCd = 1.0;
+      cameraFlash();
+      const kmh = Math.round(Math.abs(phys.vF) * 3.6);
+      const key = 'cr_board_best_' + i;
+      const old = parseInt(localStorage.getItem(key) || '0');
+      if (kmh > old) {
+        localStorage.setItem(key, String(kmh));
+        hud.toast('📡 测速点 ' + i + '：' + kmh + ' km/h（新纪录！曾是 ' + old + '）');
+      } else {
+        hud.toast('📡 测速点 ' + i + '：' + kmh + ' km/h（纪录 ' + old + '）');
+      }
+      audio.impact(3);
+    }
+  }
+}
+
+let sprint = null;   // null=未开始; {phase:'count'|'run', t, split}
+const sprintEl = el('sprintTimer');
+const promptEl = el('prompt');
+const near = (p, r) => { const dx = phys.pos.x - p[0], dz = phys.pos.z - p[1]; return dx * dx + dz * dz < r * r; };
+function sprintPress() {
+  if (GATES.length < 3) return;
+  if (sprint) {
+    sprint = null;
+    sprintEl.classList.add('hidden');
+    hud.toast('已放弃冲刺');
+    return;
+  }
+  if (!near(GATES[0], 30)) { hud.toast('先开到西侧起点的冲刺门架下'); return; }
+  sprint = { phase: 'count', t: 2.4, split: false };
+  sprintEl.classList.remove('hidden');
+}
+function updateSprint(dt) {
+  if (!sprint) {
+    if (!promptEl.classList.contains('hidden')) promptEl.classList.add('hidden');
+    if (GATES.length >= 3 && near(GATES[0], 22)) {
+      promptEl.textContent = '⚡ 按 G 开始海岸冲刺（2.5km 滨海公路）';
+      promptEl.classList.remove('hidden');
+    }
+    return;
+  }
+  if (sprint.phase === 'count') {
+    sprint.t -= dt;
+    sprintEl.classList.add('count');
+    sprintEl.textContent = sprint.t > 1.6 ? '3' : sprint.t > 0.8 ? '2' : '1';
+    if (sprint.t <= 0) {
+      sprint.phase = 'run';
+      sprint.t = 0;
+      sprintEl.classList.remove('count');
+      audio.impact(4);
+    }
+    return;
+  }
+  // 计时中
+  sprint.t += dt;
+  sprintEl.textContent = sprint.t.toFixed(2) + ' s';
+  if (!sprint.split && near(GATES[1], 16)) {
+    sprint.split = true;
+    hud.toast('中途点 ' + sprint.t.toFixed(2) + ' s');
+  }
+  if (near(GATES[2], 16)) {
+    if (sprint.split) {
+      const t = sprint.t;
+      const best = parseFloat(localStorage.getItem('cr_sprint_best') || '0');
+      if (!best || t < best) {
+        localStorage.setItem('cr_sprint_best', t.toFixed(2));
+        hud.toast('🏁 冲刺完成 ' + t.toFixed(2) + ' s —— 新纪录！（旧 ' + best.toFixed(2) + '）');
+      } else {
+        hud.toast('🏁 冲刺完成 ' + t.toFixed(2) + ' s（最佳 ' + best.toFixed(2) + '）');
+      }
+      audio.impact(6);
+    } else {
+      hud.toast('漏掉中途点，成绩无效（再试一次）');
+    }
+    sprint = null;
+    sprintEl.classList.add('hidden');
+  } else if (near(GATES[0], 14) && sprint.t > 6) {
+    sprint = null;
+    sprintEl.classList.add('hidden');
+    hud.toast('已放弃冲刺');
+  }
+}
+
+
 // ---------- 车辆外观 ----------
 const carObj = worldBits.car;
 // 氮气尾焰（挂在车身，四出排气口，加色混合青色火焰）
@@ -219,6 +321,7 @@ input.onKey = code => {
   else if (code === 'KeyC') cyclePaint();
   else if (code === 'KeyM') toggleAudio();
   else if (code === 'KeyQ') cycleQuality();
+  else if (code === 'KeyG') sprintPress();
 };
 
 if (matchMedia('(pointer: coarse)').matches) el('touchUI').classList.remove('hidden');
@@ -380,6 +483,8 @@ function tick() {
     aLongSm = aLongSm * 0.9 + phys.vF * 0.1;
     if (traffic) traffic.update(dt, phys.pos);
     updateEffects(dt, res);
+    updateTraps(dt);
+    updateSprint(dt);
 
     // —— 漂移计分（结束 0.9s 后结算弹幕）——
     if (res.drift > 0.3) {

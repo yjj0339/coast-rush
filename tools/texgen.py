@@ -229,3 +229,38 @@ for y in range(128):
 save(im, 'bark.png')
 
 print('贴图生成完成 →', OUT)
+
+# ---------------- 测速板 512×256 ----------------
+im = Image.new('RGB', (512, 256), (16, 34, 66))
+d = ImageDraw.Draw(im)
+d.rectangle([0, 0, 511, 255], outline=(90, 200, 250), width=8)
+try:
+    f1 = ImageFont.truetype('C:/Windows/Fonts/msyhbd.ttc', 84)
+    f2 = ImageFont.truetype('C:/Windows/Fonts/msyh.ttc', 44)
+except Exception:
+    f1 = f2 = ImageFont.load_default()
+d.text((36, 30), '测速点', font=f1, fill=(120, 220, 255))
+d.text((40, 140), 'SPEED CHECK', font=f2, fill=(235, 245, 255))
+for i in range(3):  # 雷达镜头
+    cx = 330 + i * 62
+    d.ellipse([cx, 128, cx + 52, 180], fill=(10, 16, 26))
+    d.ellipse([cx + 10, 140, cx + 42, 172], outline=(120, 220, 255), width=4)
+    d.ellipse([cx + 20, 148, cx + 32, 160], fill=(255, 90, 70))
+save(im, 'radar.png')
+
+# ---------------- 冲刺横幅 1024×160 ----------------
+im = Image.new('RGB', (1024, 160), (14, 60, 120))
+d = ImageDraw.Draw(im)
+for x in range(0, 1024, 46):  # 斜纹
+    d.line([(x, 160), (x + 60, 0)], fill=(18, 74, 142), width=14)
+try:
+    f1 = ImageFont.truetype('C:/Windows/Fonts/msyhbd.ttc', 86)
+    f2 = ImageFont.truetype('C:/Windows/Fonts/msyh.ttc', 40)
+except Exception:
+    f1 = f2 = ImageFont.load_default()
+d.text((200, 16), '海岸冲刺', font=f1, fill=(255, 255, 255))
+d.text((640, 52), 'COAST SPRINT', font=f2, fill=(140, 220, 255))
+d.text((40, 52), '>>> ', font=f1, fill=(255, 210, 60))
+save(im, 'sprint.png')
+
+print('测速/冲刺贴图生成完成')
